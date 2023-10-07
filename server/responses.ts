@@ -1,4 +1,5 @@
 import { User } from "./app";
+import { CollectionDoc } from "./concepts/collection";
 import { AlreadyFriendsError, FriendNotFoundError, FriendRequestAlreadyExistsError, FriendRequestDoc, FriendRequestNotFoundError } from "./concepts/friend";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { Router } from "./framework/router";
@@ -36,6 +37,26 @@ export default class Responses {
     const to = requests.map((request) => request.to);
     const usernames = await User.idsToUsernames(from.concat(to));
     return requests.map((request, i) => ({ ...request, from: usernames[i], to: usernames[i + requests.length] }));
+  }
+
+  /**
+   * Convert CollectionDoc into more readable format for the frontend
+   * by converting the owner id into a username.
+   */
+  static async collection(collection: CollectionDoc | null) {
+    if (!collection) {
+      return collection;
+    }
+    const owner = await User.getUserById(collection.owner);
+    return { ...collection, owner: owner.username };
+  }
+
+  /**
+   * Same as {@link collection} but for an array of CollectionDoc for improved performance.
+   */
+  static async collections(collections: CollectionDoc[]) {
+    const owners = await User.idsToUsernames(collections.map((collection) => collection.owner));
+    return collections.map((collection, i) => ({ ...collection, owner: owners[i] }));
   }
 }
 

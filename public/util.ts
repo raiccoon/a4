@@ -77,6 +77,42 @@ const operations: operation[] = [
     method: "DELETE",
     fields: { id: "input" },
   },
+  {
+    name: "Create Post Collection",
+    endpoint: "/api/post_collections",
+    method: "POST",
+    fields: { label: "input" },
+  },
+  {
+    name: "Get Post Collections By User (empty for logged-in user's collections)",
+    endpoint: "/api/post_collections",
+    method: "GET",
+    fields: { user: "input" },
+  },
+  {
+    name: "Add To Post Collection",
+    endpoint: "/api/post_collections/:collection/posts",
+    method: "POST",
+    fields: { collection: "input", post: "input", note: "input" },
+  },
+  {
+    name: "Get Profile (empty for logged-in user's profile)",
+    endpoint: "/api/profiles",
+    method: "GET",
+    fields: { username: "input" },
+  },
+  {
+    name: "Update Profile Name",
+    endpoint: "/api/profiles/:id/name",
+    method: "PATCH",
+    fields: { id: "input", name: "input" },
+  },
+  {
+    name: "Update Profile Bio",
+    endpoint: "/api/profiles/:id/bio",
+    method: "PATCH",
+    fields: { id: "input", bio: "input" },
+  },
 ];
 
 // Do not edit below here.

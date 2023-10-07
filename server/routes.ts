@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Friend, Post, User, WebSession } from "./app";
+import { CollectionPost, Friend, Post, Profile, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -28,7 +28,12 @@ class Routes {
   @Router.post("/users")
   async createUser(session: WebSessionDoc, username: string, password: string) {
     WebSession.isLoggedOut(session);
-    return await User.create(username, password);
+    const createdUser = await User.create(username, password);
+
+    const id = (await User.getUserByUsername(username))._id;
+    const createdProfile = await Profile.create(id);
+
+    return { msg: createdUser.msg + createdProfile.msg, user: createdUser.user, profile: createdProfile.profile };
   }
 
   @Router.patch("/users")
@@ -135,6 +140,69 @@ class Routes {
     const user = WebSession.getUser(session);
     const fromId = (await User.getUserByUsername(from))._id;
     return await Friend.rejectRequest(fromId, user);
+  }
+
+  // COLLECTIONS
+  @Router.post("/post_collections")
+  async createPostCollection(session: WebSessionDoc, label: string) {
+    const user = WebSession.getUser(session);
+    const created = await CollectionPost.create(user, label);
+    return { msg: created.msg, collection: await Responses.collection(created.collection) };
+  }
+
+  @Router.get("/post_collections")
+  async getCollections(session: WebSessionDoc, user?: string) {
+    let resp;
+    if (user) {
+      const id = (await User.getUserByUsername(user))._id;
+      resp = await CollectionPost.getCollectionsByOwner(id);
+    } else {
+      const currentUser = WebSession.getUser(session);
+      resp = await CollectionPost.getCollectionsByOwner(currentUser);
+    }
+    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  }
+
+  @Router.post("/post_collections/:collection/posts")
+  async addToPostCollection(session: WebSessionDoc, collection: ObjectId, post: ObjectId, note: string) {
+    const user = WebSession.getUser(session);
+    return await CollectionPost.labelResource(user, collection, post, note);
+  }
+
+  @Router.get("/post_collections/:collection/posts")
+  async getPostsInCollection(collection: ObjectId) {
+    return await CollectionPost.getResourcesInCollection(collection);
+  }
+
+  @Router.get("/post_collections/:id")
+  async getPostAssociatedCollections(post: ObjectId) {
+    return await CollectionPost.getAssociatedCollections(post);
+  }
+
+  // PROFILES
+  @Router.get("/profiles")
+  async getProfileByUserName(session: WebSessionDoc, username?: string) {
+    if (username) {
+      const id = (await User.getUserByUsername(username))._id;
+      return await Profile.getByUser(id);
+    } else {
+      const currentUser = WebSession.getUser(session);
+      return await Profile.getByUser(currentUser);
+    }
+  }
+
+  @Router.patch("/profiles/:_id/name")
+  async updateProfileName(session: WebSessionDoc, _id: ObjectId, name: string) {
+    const user = WebSession.getUser(session);
+    await Profile.isUser(user, _id);
+    return await Profile.editName(_id, name);
+  }
+
+  @Router.patch("/profiles/:_id/bio")
+  async updateProfileBio(session: WebSessionDoc, _id: ObjectId, bio: string) {
+    const user = WebSession.getUser(session);
+    await Profile.isUser(user, _id);
+    return await Profile.editBio(_id, bio);
   }
 }
 
