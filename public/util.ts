@@ -108,6 +108,36 @@ const operations: operation[] = [
     fields: { post: "input" },
   },
   {
+    name: "Create User Collection",
+    endpoint: "/api/user_collections",
+    method: "POST",
+    fields: { label: "input" },
+  },
+  {
+    name: "Get User Collections By User (empty for logged-in user's collections)",
+    endpoint: "/api/user_collections",
+    method: "GET",
+    fields: { user: "input" },
+  },
+  {
+    name: "Add To User Collection",
+    endpoint: "/api/user_collections/:collection/users",
+    method: "POST",
+    fields: { collection: "input", user: "input", note: "input" },
+  },
+  {
+    name: "Get Users In Collection",
+    endpoint: "/api/user_collections/:collection/users",
+    method: "GET",
+    fields: { collection: "input" },
+  },
+  {
+    name: "Get Collections associated with User",
+    endpoint: "/api/user_collections/user/:id",
+    method: "GET",
+    fields: { user: "input" },
+  },
+  {
     name: "Get Profile (empty for logged-in user's profile)",
     endpoint: "/api/profiles",
     method: "GET",

@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { CollectionPost, Friend, Post, Profile, User, WebSession } from "./app";
+import { CollectionPost, CollectionUser, Friend, Post, Profile, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -142,7 +142,48 @@ class Routes {
     return await Friend.rejectRequest(fromId, user);
   }
 
-  // COLLECTIONS
+  // COLLECTIONS - USERS
+  @Router.post("/user_collections")
+  async createUserCollection(session: WebSessionDoc, label: string) {
+    const user = WebSession.getUser(session);
+    const created = await CollectionUser.create(user, label);
+    return { msg: created.msg, collection: await Responses.collection(created.collection) };
+  }
+
+  @Router.get("/user_collections")
+  async getUserCollections(session: WebSessionDoc, user?: string) {
+    let resp;
+    if (user) {
+      const id = (await User.getUserByUsername(user))._id;
+      resp = await CollectionUser.getCollectionsByOwner(id);
+    } else {
+      const currentUser = WebSession.getUser(session);
+      resp = await CollectionUser.getCollectionsByOwner(currentUser);
+    }
+    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  }
+
+  @Router.post("/user_collections/:collection/users")
+  async addToUserCollection(session: WebSessionDoc, collection: ObjectId, user: ObjectId, note: string) {
+    const currentUser = WebSession.getUser(session);
+    return await CollectionUser.labelResource(currentUser, collection, user, note);
+  }
+
+  @Router.get("/user_collections/:collection/users")
+  async getUsersInCollection(collection: ObjectId) {
+    const labelledUsers = await CollectionUser.getResourcesInCollection(collection);
+    const userIds = labelledUsers.resources.map((labelledUser) => new ObjectId(labelledUser.resource));
+    return await User.getUsersById(userIds);
+  }
+
+  @Router.get("/user_collections/user/:id")
+  async getUserAssociatedCollections(user: ObjectId) {
+    const resp = await CollectionUser.getAssociatedCollections(user);
+    console.log(resp);
+    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  }
+
+  // COLLECTIONS - POSTS
   @Router.post("/post_collections")
   async createPostCollection(session: WebSessionDoc, label: string) {
     const user = WebSession.getUser(session);
@@ -151,7 +192,7 @@ class Routes {
   }
 
   @Router.get("/post_collections")
-  async getCollections(session: WebSessionDoc, user?: string) {
+  async getPostCollections(session: WebSessionDoc, user?: string) {
     let resp;
     if (user) {
       const id = (await User.getUserByUsername(user))._id;
