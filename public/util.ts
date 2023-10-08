@@ -96,6 +96,18 @@ const operations: operation[] = [
     fields: { collection: "input", post: "input", note: "input" },
   },
   {
+    name: "Get Posts In Collection",
+    endpoint: "/api/post_collections/:collection/posts",
+    method: "GET",
+    fields: { collection: "input" },
+  },
+  {
+    name: "Get Collections associated with Post",
+    endpoint: "/api/post_collections/post/:id",
+    method: "GET",
+    fields: { post: "input" },
+  },
+  {
     name: "Get Profile (empty for logged-in user's profile)",
     endpoint: "/api/profiles",
     method: "GET",

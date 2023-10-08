@@ -171,12 +171,16 @@ class Routes {
 
   @Router.get("/post_collections/:collection/posts")
   async getPostsInCollection(collection: ObjectId) {
-    return await CollectionPost.getResourcesInCollection(collection);
+    const labelledPosts = await CollectionPost.getResourcesInCollection(collection);
+    const postIds = labelledPosts.resources.map((labelledPost) => new ObjectId(labelledPost.resource));
+    return await Responses.posts(await Post.getPosts({ _id: { $in: postIds } }));
   }
 
-  @Router.get("/post_collections/:id")
+  @Router.get("/post_collections/post/:id")
   async getPostAssociatedCollections(post: ObjectId) {
-    return await CollectionPost.getAssociatedCollections(post);
+    const resp = await CollectionPost.getAssociatedCollections(post);
+    console.log(resp);
+    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
   }
 
   // PROFILES
