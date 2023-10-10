@@ -78,6 +78,12 @@ const operations: operation[] = [
     fields: { id: "input" },
   },
   {
+    name: "Make Post Visible - One Viewer",
+    endpoint: "/api/exclusives/posts/:id",
+    method: "POST",
+    fields: { viewer: "input", post: "input" },
+  },
+  {
     name: "Create Post Collection",
     endpoint: "/api/post_collections",
     method: "POST",

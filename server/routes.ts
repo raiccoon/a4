@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { CollectionPost, CollectionUser, Friend, Post, Profile, User, WebSession } from "./app";
+import { CollectionPost, CollectionUser, ExclusiveContentPost, Friend, Post, Profile, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -29,11 +29,8 @@ class Routes {
   async createUser(session: WebSessionDoc, username: string, password: string) {
     WebSession.isLoggedOut(session);
     const createdUser = await User.create(username, password);
-
-    const id = (await User.getUserByUsername(username))._id;
-    const createdProfile = await Profile.create(id);
-
-    return { msg: createdUser.msg + createdProfile.msg, user: createdUser.user, profile: createdProfile.profile };
+    const createdProfile = await Profile.create(createdUser.user!._id);
+    return { msg: createdUser.msg, user: createdUser.user, profile: createdProfile.profile };
   }
 
   @Router.patch("/users")
@@ -63,7 +60,8 @@ class Routes {
   }
 
   @Router.get("/posts")
-  async getPosts(author?: string) {
+  async getPosts(session: WebSessionDoc, author?: string) {
+    // get posts
     let posts;
     if (author) {
       const id = (await User.getUserByUsername(author))._id;
@@ -71,13 +69,18 @@ class Routes {
     } else {
       posts = await Post.getPosts({});
     }
-    return Responses.posts(posts);
+    // filter for posts that user is allowed to see
+    const user = WebSession.getUser(session);
+    const postViewability = await Promise.all(posts.map(async (post) => await ExclusiveContentPost.isVisible(user, post._id)));
+    const viewablePosts = posts.filter((post, i) => postViewability[i]);
+    return Responses.posts(viewablePosts);
   }
 
   @Router.post("/posts")
   async createPost(session: WebSessionDoc, content: string, options?: PostOptions) {
     const user = WebSession.getUser(session);
     const created = await Post.create(user, content, options);
+    await ExclusiveContentPost.makeVisible(user, created.post!._id);
     return { msg: created.msg, post: await Responses.post(created.post) };
   }
 
@@ -93,6 +96,14 @@ class Routes {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, _id);
     return Post.delete(_id);
+  }
+
+  // POSTS - EXCLUSIVECONTENTS
+  @Router.post("/exclusives/posts/:_id")
+  async makePostVisibleOne(session: WebSessionDoc, viewer: ObjectId, post: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Post.isAuthor(user, post);
+    return ExclusiveContentPost.makeVisible(new ObjectId(viewer), new ObjectId(post));
   }
 
   @Router.get("/friends")
@@ -166,19 +177,19 @@ class Routes {
   @Router.post("/user_collections/:collection/users")
   async addToUserCollection(session: WebSessionDoc, collection: ObjectId, user: ObjectId, note: string) {
     const currentUser = WebSession.getUser(session);
-    return await CollectionUser.labelResource(currentUser, collection, user, note);
+    return await CollectionUser.labelResource(currentUser, new ObjectId(collection), new ObjectId(user), note);
   }
 
   @Router.get("/user_collections/:collection/users")
   async getUsersInCollection(collection: ObjectId) {
-    const labelledUsers = await CollectionUser.getResourcesInCollection(collection);
+    const labelledUsers = await CollectionUser.getResourcesInCollection(new ObjectId(collection));
     const userIds = labelledUsers.resources.map((labelledUser) => new ObjectId(labelledUser.resource));
     return await User.getUsersById(userIds);
   }
 
   @Router.get("/user_collections/user/:id")
   async getUserAssociatedCollections(user: ObjectId) {
-    const resp = await CollectionUser.getAssociatedCollections(user);
+    const resp = await CollectionUser.getAssociatedCollections(new ObjectId(user));
     console.log(resp);
     return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
   }
@@ -212,14 +223,14 @@ class Routes {
 
   @Router.get("/post_collections/:collection/posts")
   async getPostsInCollection(collection: ObjectId) {
-    const labelledPosts = await CollectionPost.getResourcesInCollection(collection);
+    const labelledPosts = await CollectionPost.getResourcesInCollection(new ObjectId(collection));
     const postIds = labelledPosts.resources.map((labelledPost) => new ObjectId(labelledPost.resource));
     return await Responses.posts(await Post.getPosts({ _id: { $in: postIds } }));
   }
 
   @Router.get("/post_collections/post/:id")
   async getPostAssociatedCollections(post: ObjectId) {
-    const resp = await CollectionPost.getAssociatedCollections(post);
+    const resp = await CollectionPost.getAssociatedCollections(new ObjectId(post));
     console.log(resp);
     return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
   }
@@ -239,15 +250,15 @@ class Routes {
   @Router.patch("/profiles/:_id/name")
   async updateProfileName(session: WebSessionDoc, _id: ObjectId, name: string) {
     const user = WebSession.getUser(session);
-    await Profile.isUser(user, _id);
-    return await Profile.editName(_id, name);
+    await Profile.isUser(user, new ObjectId(_id));
+    return await Profile.editName(new ObjectId(_id), name);
   }
 
   @Router.patch("/profiles/:_id/bio")
   async updateProfileBio(session: WebSessionDoc, _id: ObjectId, bio: string) {
     const user = WebSession.getUser(session);
-    await Profile.isUser(user, _id);
-    return await Profile.editBio(_id, bio);
+    await Profile.isUser(user, new ObjectId(_id));
+    return await Profile.editBio(new ObjectId(_id), bio);
   }
 }
 
