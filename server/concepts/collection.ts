@@ -43,13 +43,13 @@ export default class CollectionConcept {
 
   async getResourcesInCollection(collection: ObjectId) {
     await this.collectionExists(collection);
-    const resources = await this.labelledResources.readMany({ collection: collection });
+    const resources = await this.labelledResources.readMany({ collection });
     return { msg: "Resources in collection retrieved", resources };
   }
 
   async getAssociatedCollections(resource: ObjectId) {
     const collectionPairs = await this.labelledResources.readMany({ resource });
-    const collectionIds = collectionPairs.map((pair) => new ObjectId(pair.collection));
+    const collectionIds = collectionPairs.map((pair) => pair.collection);
     const collections = await this.collections.readMany({ _id: { $in: collectionIds } });
     return { msg: "Associated collections retrieved!", collections };
   }
