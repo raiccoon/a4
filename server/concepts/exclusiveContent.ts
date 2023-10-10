@@ -19,12 +19,24 @@ export default class ExclusiveContentConcept {
     return { msg: "Made content visible to viewer!", ExclusiveContent: await this.exclusiveContents.readOne({ _id }) };
   }
 
+  async makeVisibleToMany(viewers: ObjectId[], content: ObjectId) {
+    for (const viewer in viewers) {
+      await this.exclusiveContents.createOne({ viewer: new ObjectId(viewer), content });
+    }
+
+    return { msg: "Made content visible to viewers!" };
+  }
+
   async makeInvisible(viewer: ObjectId, content: ObjectId) {
     const maybeExclusiveContent = await this.exclusiveContents.popOne({ viewer, content });
     if (maybeExclusiveContent === null) {
       return { msg: "Content already invisible!" };
     }
     return { msg: "Made content invisible to viewer!", ExclusiveContent: maybeExclusiveContent };
+  }
+
+  async makeInvisibleToMany(viewers: ObjectId[], content: ObjectId) {
+    return await this.exclusiveContents.deleteMany({ viewer: { $in: viewers }, content: content });
   }
 
   async isVisible(viewer: ObjectId, content: ObjectId) {
