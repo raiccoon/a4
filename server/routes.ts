@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { CollectionPost, CollectionUser, ExclusiveContentPost, Friend, Post, Profile, User, WebSession } from "./app";
+import { CollectionPost, CollectionUser, ExclusiveContentCollectionPost, ExclusiveContentCollectionUser, ExclusiveContentPost, Friend, Post, Profile, User, WebSession } from "./app";
 import { PostDoc, PostOptions } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -71,9 +71,9 @@ class Routes {
     }
     // filter for posts that user is allowed to see
     const user = WebSession.getUser(session);
-    const postViewability = await Promise.all(posts.map(async (post) => await ExclusiveContentPost.isVisible(user, post._id)));
-    const viewablePosts = posts.filter((post, i) => postViewability[i]);
-    return Responses.posts(viewablePosts);
+    const postVisibility = await Promise.all(posts.map(async (post) => await ExclusiveContentPost.isVisible(user, post._id)));
+    const visiblePosts = posts.filter((post, i) => postVisibility[i]);
+    return Responses.posts(visiblePosts);
   }
 
   @Router.post("/posts")
@@ -158,20 +158,19 @@ class Routes {
   async createUserCollection(session: WebSessionDoc, label: string) {
     const user = WebSession.getUser(session);
     const created = await CollectionUser.create(user, label);
+    await ExclusiveContentCollectionUser.makeVisible(user, created.collection!._id);
     return { msg: created.msg, collection: await Responses.collection(created.collection) };
   }
 
   @Router.get("/user_collections")
-  async getUserCollections(session: WebSessionDoc, user?: string) {
-    let resp;
-    if (user) {
-      const id = (await User.getUserByUsername(user))._id;
-      resp = await CollectionUser.getCollectionsByOwner(id);
-    } else {
-      const currentUser = WebSession.getUser(session);
-      resp = await CollectionUser.getCollectionsByOwner(currentUser);
-    }
-    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  async getUserCollections(session: WebSessionDoc, user: string) {
+    const currentUser = WebSession.getUser(session);
+    const userId = (await User.getUserByUsername(user))._id;
+    const resp = await CollectionUser.getCollectionsByOwner(userId);
+    // fitler for visible collections
+    const collectionVisibility = await Promise.all(resp.collections.map(async (c) => await ExclusiveContentCollectionUser.isVisible(currentUser, c._id)));
+    const visibleCollections = resp.collections.filter((post, i) => collectionVisibility[i]);
+    return { msg: resp.msg, collections: await Responses.collections(visibleCollections) };
   }
 
   @Router.post("/user_collections/:collection/users")
@@ -199,20 +198,19 @@ class Routes {
   async createPostCollection(session: WebSessionDoc, label: string) {
     const user = WebSession.getUser(session);
     const created = await CollectionPost.create(user, label);
+    await ExclusiveContentCollectionPost.makeVisible(user, created.collection!._id);
     return { msg: created.msg, collection: await Responses.collection(created.collection) };
   }
 
-  @Router.get("/post_collections")
-  async getPostCollections(session: WebSessionDoc, user?: string) {
-    let resp;
-    if (user) {
-      const id = (await User.getUserByUsername(user))._id;
-      resp = await CollectionPost.getCollectionsByOwner(id);
-    } else {
-      const currentUser = WebSession.getUser(session);
-      resp = await CollectionPost.getCollectionsByOwner(currentUser);
-    }
-    return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  @Router.get("/post_collections/user")
+  async getPostCollections(session: WebSessionDoc, user: string) {
+    const currentUser = WebSession.getUser(session);
+    const userId = (await User.getUserByUsername(user))._id;
+    const resp = await CollectionPost.getCollectionsByOwner(userId);
+    // filter for visible collections
+    const collectionVisibility = await Promise.all(resp.collections.map(async (c) => await ExclusiveContentCollectionPost.isVisible(currentUser, c._id)));
+    const visibleCollections = resp.collections.filter((post, i) => collectionVisibility[i]);
+    return { msg: resp.msg, collections: await Responses.collections(visibleCollections) };
   }
 
   @Router.post("/post_collections/:collection/posts")

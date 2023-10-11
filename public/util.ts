@@ -90,8 +90,8 @@ const operations: operation[] = [
     fields: { label: "input" },
   },
   {
-    name: "Get Post Collections By User (empty for logged-in user's collections)",
-    endpoint: "/api/post_collections",
+    name: "Get Post Collections By User",
+    endpoint: "/api/post_collections/:user",
     method: "GET",
     fields: { user: "input" },
   },
@@ -120,8 +120,8 @@ const operations: operation[] = [
     fields: { label: "input" },
   },
   {
-    name: "Get User Collections By User (empty for logged-in user's collections)",
-    endpoint: "/api/user_collections",
+    name: "Get User Collections By User",
+    endpoint: "/api/user_collections/:user",
     method: "GET",
     fields: { user: "input" },
   },
