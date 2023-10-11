@@ -106,6 +106,17 @@ class Routes {
     return ExclusiveContentPost.makeVisible(new ObjectId(viewer), new ObjectId(post));
   }
 
+  @Router.post("/exclusives/posts/:post/many")
+  async makePostVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, post: ObjectId) {
+    const user = WebSession.getUser(session);
+    await Post.isAuthor(user, post);
+    const viewers = await CollectionUser.getResourcesInCollection(new ObjectId(viewerCollection));
+    return ExclusiveContentPost.makeVisibleToMany(
+      viewers.resources.map((user) => user._id),
+      new ObjectId(post),
+    );
+  }
+
   @Router.get("/friends")
   async getFriends(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
@@ -200,6 +211,17 @@ class Routes {
     return ExclusiveContentCollectionUser.makeVisible(new ObjectId(viewer), new ObjectId(collection));
   }
 
+  @Router.post("/exclusives/user_collections/:collection/many")
+  async makeCollectionUserVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, collection: ObjectId) {
+    const user = WebSession.getUser(session);
+    await CollectionUser.isOwner(user, new ObjectId(collection));
+    const viewers = await CollectionUser.getResourcesInCollection(new ObjectId(viewerCollection));
+    return ExclusiveContentCollectionUser.makeVisibleToMany(
+      viewers.resources.map((user) => user._id),
+      new ObjectId(collection),
+    );
+  }
+
   // COLLECTIONS - POSTS
   @Router.post("/post_collections")
   async createPostCollection(session: WebSessionDoc, label: string) {
@@ -245,6 +267,17 @@ class Routes {
     const user = WebSession.getUser(session);
     await CollectionPost.isOwner(user, new ObjectId(collection));
     return ExclusiveContentCollectionPost.makeVisible(new ObjectId(viewer), new ObjectId(collection));
+  }
+
+  @Router.post("/exclusives/post_collections/:collection/many")
+  async makeCollectionPostVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, collection: ObjectId) {
+    const user = WebSession.getUser(session);
+    await CollectionPost.isOwner(user, new ObjectId(collection));
+    const viewers = await CollectionUser.getResourcesInCollection(new ObjectId(viewerCollection));
+    return ExclusiveContentCollectionPost.makeVisibleToMany(
+      viewers.resources.map((user) => user._id),
+      new ObjectId(collection),
+    );
   }
 
   // PROFILES
