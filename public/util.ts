@@ -61,7 +61,7 @@ const operations: operation[] = [
   },
   {
     name: "Get Posts by Author Collection",
-    endpoint: "/api/posts/:author_collection",
+    endpoint: "/api/posts?authorsIn=[author_collection]",
     method: "GET",
     fields: { author_collection: "input" },
   },
@@ -85,13 +85,13 @@ const operations: operation[] = [
   },
   {
     name: "Make Post Visible - One Viewer",
-    endpoint: "/api/exclusives/posts/:post",
+    endpoint: "/api/exclusives/posts/:post?viewer=[viewer]",
     method: "POST",
     fields: { viewer: "input", post: "input" },
   },
   {
     name: "Make Post Visible - Collection of Viewers",
-    endpoint: "/api/exclusives/posts/:post/many",
+    endpoint: "/api/exclusives/posts/:post?viewer_collection=[viewerCollection]",
     method: "POST",
     fields: { viewerCollection: "input", post: "input" },
   },
@@ -127,13 +127,13 @@ const operations: operation[] = [
   },
   {
     name: "Make Post Collection Visible - One Viewer",
-    endpoint: "/api/exclusives/post_collections/:collection",
+    endpoint: "/api/exclusives/post_collections/:collection?viewer=[viewer]",
     method: "POST",
     fields: { viewer: "input", collection: "input" },
   },
   {
     name: "Make Post Collection Visible - Collection of Viewers",
-    endpoint: "/api/exclusives/post_collections/:collection/many",
+    endpoint: "/api/exclusives/post_collections/:collection?viewer_collection=[viewerCollection]",
     method: "POST",
     fields: { viewerCollection: "input", collection: "input" },
   },
@@ -169,13 +169,13 @@ const operations: operation[] = [
   },
   {
     name: "Make User Collection Visible - One Viewer",
-    endpoint: "/api/exclusives/user_collections/:collection",
+    endpoint: "/api/exclusives/user_collections/:collection?viewer=[viewer]",
     method: "POST",
     fields: { viewer: "input", collection: "input" },
   },
   {
     name: "Make User Collection Visible - Collection of Viewers",
-    endpoint: "/api/exclusives/user_collections/:collection/many",
+    endpoint: "/api/exclusives/user_collections/:collection?viewer_collection=[viewerCollection]",
     method: "POST",
     fields: { viewerCollection: "input", collection: "input" },
   },

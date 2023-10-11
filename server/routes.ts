@@ -76,7 +76,7 @@ class Routes {
     return { msg: "Posts retreived!", posts: await Responses.posts(visiblePosts) };
   }
 
-  @Router.get("/posts/:author_collection")
+  @Router.get("/posts?authorsIn=[author_collection]")
   async getPostsByAuthorCollection(session: WebSessionDoc, author_collection: ObjectId) {
     // get posts
     const authors = await CollectionUser.getResourcesInCollection(new ObjectId(author_collection));
@@ -112,14 +112,14 @@ class Routes {
   }
 
   // POSTS - EXCLUSIVECONTENTS
-  @Router.post("/exclusives/posts/:post")
+  @Router.post("/exclusives/posts/:post?viewer=[viewer]")
   async makePostVisibleOne(session: WebSessionDoc, viewer: ObjectId, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, post);
     return ExclusiveContentPost.makeVisible(new ObjectId(viewer), new ObjectId(post));
   }
 
-  @Router.post("/exclusives/posts/:post/many")
+  @Router.post("/exclusives/posts/:post?viewer_collection=[viewerCollection]")
   async makePostVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, post);
@@ -217,14 +217,14 @@ class Routes {
   }
 
   // COLLECTIONS - USERS - EXCLUSIVECONTENTS
-  @Router.post("/exclusives/user_collections/:collection")
+  @Router.post("/exclusives/user_collections/:collection?viewer=[viewer]")
   async makeCollectionUserVisibleOne(session: WebSessionDoc, viewer: ObjectId, collection: ObjectId) {
     const user = WebSession.getUser(session);
     await CollectionUser.isOwner(user, new ObjectId(collection));
     return ExclusiveContentCollectionUser.makeVisible(new ObjectId(viewer), new ObjectId(collection));
   }
 
-  @Router.post("/exclusives/user_collections/:collection/many")
+  @Router.post("/exclusives/user_collections/:collection?viewer_collection=[viewerCollection]")
   async makeCollectionUserVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, collection: ObjectId) {
     const user = WebSession.getUser(session);
     await CollectionUser.isOwner(user, new ObjectId(collection));
@@ -275,14 +275,14 @@ class Routes {
   }
 
   // COLLECTIONS - POSTS - EXCLUSIVECONTENTS
-  @Router.post("/exclusives/post_collections/:collection")
+  @Router.post("/exclusives/post_collections/:collection?viewer=[viewer]")
   async makeCollectionPostVisibleOne(session: WebSessionDoc, viewer: ObjectId, collection: ObjectId) {
     const user = WebSession.getUser(session);
     await CollectionPost.isOwner(user, new ObjectId(collection));
     return ExclusiveContentCollectionPost.makeVisible(new ObjectId(viewer), new ObjectId(collection));
   }
 
-  @Router.post("/exclusives/post_collections/:collection/many")
+  @Router.post("/exclusives/post_collections/:collection?viewer_collection=[viewerCollection]")
   async makeCollectionPostVisibleCollection(session: WebSessionDoc, viewerCollection: ObjectId, collection: ObjectId) {
     const user = WebSession.getUser(session);
     await CollectionPost.isOwner(user, new ObjectId(collection));
