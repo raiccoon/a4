@@ -99,7 +99,7 @@ class Routes {
   }
 
   // POSTS - EXCLUSIVECONTENTS
-  @Router.post("/exclusives/posts/:_id")
+  @Router.post("/exclusives/posts/:post")
   async makePostVisibleOne(session: WebSessionDoc, viewer: ObjectId, post: ObjectId) {
     const user = WebSession.getUser(session);
     await Post.isAuthor(user, post);
@@ -193,6 +193,14 @@ class Routes {
     return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
   }
 
+  // COLLECTIONS - USERS - EXCLUSIVECONTENTS
+  @Router.post("/exclusives/user_collections/:_id")
+  async makeCollectionUserVisibleOne(session: WebSessionDoc, viewer: ObjectId, collection: ObjectId) {
+    const user = WebSession.getUser(session);
+    await CollectionUser.isOwner(user, collection);
+    return ExclusiveContentCollectionUser.makeVisible(new ObjectId(viewer), new ObjectId(collection));
+  }
+
   // COLLECTIONS - POSTS
   @Router.post("/post_collections")
   async createPostCollection(session: WebSessionDoc, label: string) {
@@ -231,6 +239,14 @@ class Routes {
     const resp = await CollectionPost.getAssociatedCollections(new ObjectId(post));
     console.log(resp);
     return { msg: resp.msg, collections: await Responses.collections(resp.collections) };
+  }
+
+  // COLLECTIONS - POSTS - EXCLUSIVECONTENTS
+  @Router.post("/exclusives/post_collections/:_id")
+  async makeCollectionPostVisibleOne(session: WebSessionDoc, viewer: ObjectId, collection: ObjectId) {
+    const user = WebSession.getUser(session);
+    await CollectionPost.isOwner(user, collection);
+    return ExclusiveContentCollectionPost.makeVisible(new ObjectId(viewer), new ObjectId(collection));
   }
 
   // PROFILES

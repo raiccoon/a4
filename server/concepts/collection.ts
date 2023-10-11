@@ -62,9 +62,12 @@ export default class CollectionConcept {
     }
   }
 
-  private async isOwner(user: ObjectId, collection: ObjectId) {
-    const maybeCollection = await this.collections.readOne({ _id: collection, owner: user });
-    if (maybeCollection === null) {
+  async isOwner(user: ObjectId, collection: ObjectId) {
+    const maybeCollection = await this.collections.readOne({ _id: collection });
+    if (!maybeCollection) {
+      throw new NotFoundError(`Collection ${collection} does not exist!`);
+    }
+    if (maybeCollection.owner.toString() !== user.toString()) {
       throw new NotAllowedError("{0} is not the owner of and can't edit collection {1}", user, collection);
     }
   }

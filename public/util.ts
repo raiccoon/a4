@@ -79,7 +79,7 @@ const operations: operation[] = [
   },
   {
     name: "Make Post Visible - One Viewer",
-    endpoint: "/api/exclusives/posts/:id",
+    endpoint: "/api/exclusives/posts/:post",
     method: "POST",
     fields: { viewer: "input", post: "input" },
   },
@@ -114,6 +114,12 @@ const operations: operation[] = [
     fields: { post: "input" },
   },
   {
+    name: "Make User Collection Visible - One Viewer",
+    endpoint: "/api/exclusives/post_collections/:collection",
+    method: "POST",
+    fields: { viewer: "input", collection: "input" },
+  },
+  {
     name: "Create User Collection",
     endpoint: "/api/user_collections",
     method: "POST",
@@ -142,6 +148,12 @@ const operations: operation[] = [
     endpoint: "/api/user_collections/user/:id",
     method: "GET",
     fields: { user: "input" },
+  },
+  {
+    name: "Make User Collection Visible - One Viewer",
+    endpoint: "/api/exclusives/user_collections/:collection",
+    method: "POST",
+    fields: { viewer: "input", collection: "input" },
   },
   {
     name: "Get Profile (empty for logged-in user's profile)",
