@@ -91,9 +91,9 @@ const operations: operation[] = [
   },
   {
     name: "Get Post Collections By User",
-    endpoint: "/api/post_collections/:user",
+    endpoint: "/api/post_collections/:username",
     method: "GET",
-    fields: { user: "input" },
+    fields: { username: "input" },
   },
   {
     name: "Add To Post Collection",
@@ -114,7 +114,7 @@ const operations: operation[] = [
     fields: { post: "input" },
   },
   {
-    name: "Make User Collection Visible - One Viewer",
+    name: "Make Post Collection Visible - One Viewer",
     endpoint: "/api/exclusives/post_collections/:collection",
     method: "POST",
     fields: { viewer: "input", collection: "input" },
@@ -127,9 +127,9 @@ const operations: operation[] = [
   },
   {
     name: "Get User Collections By User",
-    endpoint: "/api/user_collections/:user",
+    endpoint: "/api/user_collections/:username",
     method: "GET",
-    fields: { user: "input" },
+    fields: { username: "input" },
   },
   {
     name: "Add To User Collection",
