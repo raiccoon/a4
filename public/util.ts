@@ -60,6 +60,12 @@ const operations: operation[] = [
     fields: { author: "input" },
   },
   {
+    name: "Get Posts by Author Collection",
+    endpoint: "/api/posts/:author_collection",
+    method: "GET",
+    fields: { author_collection: "input" },
+  },
+  {
     name: "Create Post",
     endpoint: "/api/posts",
     method: "POST",
